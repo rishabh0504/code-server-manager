@@ -3,6 +3,7 @@
 import { API_END_POINTS } from "@/common/constant";
 import DockerExecutorLogs from "@/components/modals/docker-executor-logs";
 import { DockerScriptModal } from "@/components/modals/docker-script-modal";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,6 +29,7 @@ import type { DockerScript } from "@/lib/types";
 import {
   Activity,
   ArrowLeft,
+  Clock,
   Copy,
   Download,
   Edit,
@@ -236,20 +238,6 @@ export default function DockerScriptDetailPage() {
                         </p>
                       </div>
                     )}
-
-                    {/* Test Results */}
-                    {/* {script.testResult && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Test Results
-                        </p>
-                        <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm text-green-800">
-                            {script.testResult}
-                          </p>
-                        </div>
-                      </div>
-                    )} */}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -263,44 +251,61 @@ export default function DockerScriptDetailPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {/* <div className="space-y-4">
-                      {script.buildHistory.map((build) => (
-                        <div
-                          key={build.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              {build.status === "SUCCESS" ? (
-                                <div className="h-2 w-2 bg-green-500 rounded-full" />
-                              ) : (
-                                <div className="h-2 w-2 bg-red-500 rounded-full" />
-                              )}
-                              {getBuildStatusBadge(build.status)}
+                    <div className="space-y-4">
+                      {dockerScript?.builds?.map((build) => (
+                        <Card key={build.id}>
+                          <CardContent className="p-4 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                              {/* Status + Tag */}
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`h-2 w-2 rounded-full ${
+                                    build.status === "SUCCESS"
+                                      ? "bg-green-500"
+                                      : "bg-red-500"
+                                  }`}
+                                />
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    build.status === "SUCCESS"
+                                      ? "bg-green-500 text-white"
+                                      : "bg-red-500 text-white"
+                                  }
+                                >
+                                  {build.status}
+                                </Badge>
+                              </div>
+
+                              {/* Build Info */}
+                              <div>
+                                <p className="text-sm font-medium">
+                                  Build #{build.id}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {build.startedAt &&
+                                    new Date(
+                                      build.startedAt
+                                    ).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">
-                                Build #{build.id}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {build.timestamp.toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm">
-                              <code className="bg-muted px-1 py-0.5 rounded text-xs">
-                                {build.tag}
+
+                            {/* Image Tag + Completed At */}
+                            <div className="text-right space-y-1">
+                              <code className="bg-muted text-xs px-2 py-1 rounded">
+                                {build.imageTag}
                               </code>
-                            </p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {build.duration}
-                            </p>
-                          </div>
-                        </div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                {build.completedAt &&
+                                  new Date(build.completedAt).toLocaleString()}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
-                    </div> */}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

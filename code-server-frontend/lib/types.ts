@@ -65,12 +65,24 @@ export interface Credentials {
   updatedAt?: Date;
 }
 
+export interface Build {
+  id: string;
+  dockerScript: any | null;
+  dockerScriptId: string;
+  status: string;
+  imageTag: string;
+  startedAt: Date;
+  completedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface DockerScript {
   id: string;
   dockerFile: string;
   name: string;
   description: string;
-  builds: any | null; // You can replace `any` with a specific type if you know the structure
-  createdAt: Date; // or `Date` if you parse it
-  updatedAt: Date; // or `Date` if you parse it
+  builds?: Build[];
+  createdAt: Date;
+  updatedAt: Date;
 }

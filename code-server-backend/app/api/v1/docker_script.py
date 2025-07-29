@@ -41,7 +41,7 @@ async def get_all_scripts():
 @docker_script_router.get("/{script_id}", response_model=SuccessResponse)
 async def get_script(script_id: str):
     try:
-        script = await prisma.dockerscript.find_unique(where={"id": script_id})
+        script = await prisma.dockerscript.find_unique(where={"id": script_id}, include={"builds": True})
         if not script:
             raise HTTPException(status_code=404, detail="Script not found")
         return SuccessResponse(data=script, status_code=200)
