@@ -49,7 +49,7 @@ export function CredentialModal({
     loading,
     post: createCredential,
   } = useFetch({
-    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALs.create}`,
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALS.create}`,
   });
 
   useEffect(() => {

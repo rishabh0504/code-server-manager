@@ -62,7 +62,7 @@ export default function CredentialsPage() {
     get: fetchCredential,
     del: deleteCredentials,
   } = useFetch({
-    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALs.read}`,
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALS.read}`,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,7 +89,7 @@ export default function CredentialsPage() {
 
   const handleDelete = async (credential: any) => {
     const response = await deleteCredentials(
-      `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALs.delete}/${credential.id}`
+      `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CREDENTIALS.delete}/${credential.id}`
     );
     if (response.status === "success") {
       loadCredentials();

@@ -67,16 +67,10 @@ export interface Credentials {
 
 export interface DockerScript {
   id: string;
+  dockerFile: string;
   name: string;
-  script: string;
-  credentialId: string;
-  credential: Credentials;
-  registryUrl: string;
-  tag: string;
-  buildStatus: BuildStatus;
-  testResult?: string;
-  logs?: string;
-  pushedImageUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  description: string;
+  builds: any | null; // You can replace `any` with a specific type if you know the structure
+  createdAt: Date; // or `Date` if you parse it
+  updatedAt: Date; // or `Date` if you parse it
 }

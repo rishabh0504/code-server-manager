@@ -2,7 +2,10 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { API_END_POINTS } from "@/common/constant";
+import { DockerScriptModal } from "@/components/modals/docker-script-modal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,18 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,72 +21,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useFetch } from "@/hooks/use-fetch";
+import type { BuildStatus, DockerScript } from "@/lib/types";
+import {
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  MoreHorizontal,
+  Play,
   Plus,
   Search,
-  MoreHorizontal,
-  Edit,
   Trash2,
-  Play,
-  Eye,
-  Download,
-  FileText,
 } from "lucide-react";
-import { DockerScriptModal } from "@/components/modals/docker-script-modal";
 import { useRouter } from "next/navigation";
-import type { BuildStatus } from "@/lib/types";
-
-// Mock data
-const dockerScripts = [
-  {
-    id: "1",
-    name: "Node.js Development Environment",
-    description: "Complete Node.js development setup with tools",
-    script:
-      'FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\nCMD ["npm", "start"]',
-    credentialId: "1",
-    credentialName: "Docker Hub Registry",
-    registryUrl: "https://hub.docker.com",
-    tag: "latest",
-    buildStatus: "SUCCESS" as BuildStatus,
-    testResult: "All tests passed",
-    pushedImageUrl: "johndoe/node-dev:latest",
-    createdAt: new Date("2024-01-15"),
-    lastBuild: new Date("2024-01-20T14:30:00"),
-  },
-  {
-    id: "2",
-    name: "Python Data Science Stack",
-    description: "Python environment with data science libraries",
-    script:
-      'FROM python:3.9-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nEXPOSE 8888\nCMD ["jupyter", "notebook"]',
-    credentialId: "1",
-    credentialName: "Docker Hub Registry",
-    registryUrl: "https://hub.docker.com",
-    tag: "v1.0.0",
-    buildStatus: "BUILDING" as BuildStatus,
-    testResult: null,
-    pushedImageUrl: null,
-    createdAt: new Date("2024-01-16"),
-    lastBuild: new Date("2024-01-19T16:20:00"),
-  },
-  {
-    id: "3",
-    name: "React Production Build",
-    description: "Optimized React production deployment",
-    script:
-      'FROM node:18-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\nCOPY . .\nRUN npm run build\n\nFROM nginx:alpine\nCOPY --from=builder /app/build /usr/share/nginx/html\nEXPOSE 80\nCMD ["nginx", "-g", "daemon off;"]',
-    credentialId: "2",
-    credentialName: "GitHub Container Registry",
-    registryUrl: "https://ghcr.io",
-    tag: "latest",
-    buildStatus: "FAILED" as BuildStatus,
-    testResult: "Build failed: Module not found",
-    pushedImageUrl: null,
-    createdAt: new Date("2024-01-17"),
-    lastBuild: new Date("2024-01-18T10:15:00"),
-  },
-];
+import { useEffect, useState } from "react";
 
 function getBuildStatusBadge(status: BuildStatus) {
   const variants: Record<
@@ -127,11 +77,29 @@ export default function DockerScriptsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedScript, setSelectedScript] = useState<any>(null);
   const router = useRouter();
+  const {
+    data,
+    loading,
+    get: fetchDockerScripts,
+  } = useFetch({
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.read}`,
+  });
+
+  const [dockerScripts, setDockerScripts] = useState<DockerScript[]>([]);
+
+  const loadDockerScripts = async () => {
+    const response = await fetchDockerScripts();
+    if (response.status === "success") {
+      setDockerScripts(response.data || []);
+    }
+  };
+  useEffect(() => {
+    loadDockerScripts();
+  }, []);
 
   const filteredScripts = dockerScripts.filter(
     (script) =>
       script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      script.credentialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       script.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -188,11 +156,9 @@ export default function DockerScriptsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registry</TableHead>
-                  <TableHead>Tag</TableHead>
-                  <TableHead>Last Build</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead>Last Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -204,49 +170,31 @@ export default function DockerScriptsPage() {
                     onClick={() => handleRowClick(script.id)}
                   >
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{script.name}</p>
-                        <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                          {script.description}
-                        </p>
-                      </div>
+                      <p className="font-medium">{script.name}</p>
+                    </TableCell>
+
+                    <TableCell>
+                      <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                        {script.description}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      {script.createdAt ? (
+                        <span>{new Date(script.createdAt).toDateString()}</span>
+                      ) : (
+                        <span className="text-muted-foreground">Never</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      {getBuildStatusBadge(script.buildStatus)}
+                      {script.updatedAt ? (
+                        <span>{new Date(script.updatedAt).toDateString()}</span>
+                      ) : (
+                        <span className="text-muted-foreground">Never</span>
+                      )}
                     </TableCell>
+
                     <TableCell>
-                      <div>
-                        <div className="font-medium text-sm">
-                          {script.credentialName}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {script.registryUrl}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                        {script.tag}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {script.lastBuild ? (
-                          <>
-                            <div>{script.lastBuild.toLocaleDateString()}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {script.lastBuild.toLocaleTimeString()}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">Never</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {script.createdAt.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -258,8 +206,10 @@ export default function DockerScriptsPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
+
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
@@ -269,38 +219,57 @@ export default function DockerScriptsPage() {
                             <FileText className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
+
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRowClick(script.id);
+                              // handleRowClick(script.id); // You can replace this with handleRun if needed
                             }}
                           >
                             <Play className="mr-2 h-4 w-4" />
                             Run Script
                           </DropdownMenuItem>
+
                           <DropdownMenuItem
-                            onClick={(e) => handleEdit(script, e)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(script, e);
+                            }}
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
+
                           <DropdownMenuItem
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // handleViewScript(script);
+                            }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             View Script
                           </DropdownMenuItem>
+
                           <DropdownMenuSeparator />
+
                           <DropdownMenuItem
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // handleDownloadLogs(script.id);
+                            }}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             Download Logs
                           </DropdownMenuItem>
+
                           <DropdownMenuSeparator />
+
                           <DropdownMenuItem
                             className="text-red-600"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // handleDelete(script.id);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
@@ -318,7 +287,10 @@ export default function DockerScriptsPage() {
 
       <DockerScriptModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          loadDockerScripts();
+        }}
         script={selectedScript}
       />
     </div>

@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import List
 import docker
 from fastapi import HTTPException, status
@@ -37,3 +38,11 @@ def perform_docker_actions(container_name: str, commands: List[str], user:str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong while running docker actions"
         )
+
+def log_generator(fileobj: BytesIO, tag:str):
+    try:
+        for chunk in client.api.build(fileobj=fileobj, rm=True, decode=True, pull=True, tag=tag):
+            if 'stream' in chunk:
+                yield chunk['stream']
+    except Exception as e:
+        yield f"Error: {str(e)}\n"

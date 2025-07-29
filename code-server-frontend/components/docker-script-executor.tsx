@@ -1,46 +1,94 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Play, Square, Download, RotateCcw, CheckCircle, XCircle, Clock, Activity } from "lucide-react"
-import type { BuildStatus } from "@/lib/types"
+import { useState, useEffect, useRef } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  Play,
+  Square,
+  Download,
+  RotateCcw,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Activity,
+} from "lucide-react";
+import type { BuildStatus } from "@/lib/types";
 
 interface ExecutionLog {
-  id: string
-  timestamp: Date
-  step: string
-  message: string
-  type: "info" | "success" | "error" | "warning"
+  id: string;
+  timestamp: Date;
+  step: string;
+  message: string;
+  type: "info" | "success" | "error" | "warning";
 }
 
 interface DockerScriptExecutorProps {
-  scriptId: string
-  scriptName: string
-  onStatusChange?: (status: BuildStatus) => void
-  autoStart?: boolean
+  scriptId: string;
+  scriptName: string;
+  onStatusChange?: (status: BuildStatus) => void;
+  autoStart?: boolean;
 }
 
 const mockExecutionSteps = [
   { step: "1/12", message: "FROM node:18-alpine", type: "info" as const },
-  { step: "1/12", message: "18-alpine: Pulling from library/node", type: "info" as const },
-  { step: "1/12", message: "Digest: sha256:7e4b2c8c9a1b...", type: "info" as const },
-  { step: "1/12", message: "Status: Downloaded newer image for node:18-alpine", type: "success" as const },
-  { step: "2/12", message: "WORKDIR /app", type: "info" as const },
-  { step: "3/12", message: "RUN apk add --no-cache git curl", type: "info" as const },
   {
-    step: "3/12",
-    message: "fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/main/x86_64/APKINDEX.tar.gz",
+    step: "1/12",
+    message: "18-alpine: Pulling from library/node",
     type: "info" as const,
   },
-  { step: "3/12", message: "(1/7) Installing ca-certificates (20230506-r0)", type: "info" as const },
-  { step: "3/12", message: "(2/7) Installing git (2.40.1-r0)", type: "info" as const },
-  { step: "3/12", message: "(3/7) Installing curl (8.1.2-r0)", type: "info" as const },
-  { step: "3/12", message: "OK: 15 MiB in 22 packages", type: "success" as const },
+  {
+    step: "1/12",
+    message: "Digest: sha256:7e4b2c8c9a1b...",
+    type: "info" as const,
+  },
+  {
+    step: "1/12",
+    message: "Status: Downloaded newer image for node:18-alpine",
+    type: "success" as const,
+  },
+  { step: "2/12", message: "WORKDIR /app", type: "info" as const },
+  {
+    step: "3/12",
+    message: "RUN apk add --no-cache git curl",
+    type: "info" as const,
+  },
+  {
+    step: "3/12",
+    message:
+      "fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/main/x86_64/APKINDEX.tar.gz",
+    type: "info" as const,
+  },
+  {
+    step: "3/12",
+    message: "(1/7) Installing ca-certificates (20230506-r0)",
+    type: "info" as const,
+  },
+  {
+    step: "3/12",
+    message: "(2/7) Installing git (2.40.1-r0)",
+    type: "info" as const,
+  },
+  {
+    step: "3/12",
+    message: "(3/7) Installing curl (8.1.2-r0)",
+    type: "info" as const,
+  },
+  {
+    step: "3/12",
+    message: "OK: 15 MiB in 22 packages",
+    type: "success" as const,
+  },
   { step: "4/12", message: "COPY package*.json ./", type: "info" as const },
   { step: "5/12", message: "RUN npm install", type: "info" as const },
   {
@@ -50,19 +98,40 @@ const mockExecutionSteps = [
   },
   {
     step: "5/12",
-    message: "added 1156 packages from 1204 contributors and audited 1157 packages in 23.456s",
+    message:
+      "added 1156 packages from 1204 contributors and audited 1157 packages in 23.456s",
     type: "success" as const,
   },
   { step: "6/12", message: "COPY . .", type: "info" as const },
-  { step: "7/12", message: "RUN addgroup -g 1001 -S nodejs", type: "info" as const },
-  { step: "8/12", message: "RUN adduser -S nextjs -u 1001", type: "info" as const },
-  { step: "9/12", message: "RUN chown -R nextjs:nodejs /app", type: "info" as const },
+  {
+    step: "7/12",
+    message: "RUN addgroup -g 1001 -S nodejs",
+    type: "info" as const,
+  },
+  {
+    step: "8/12",
+    message: "RUN adduser -S nextjs -u 1001",
+    type: "info" as const,
+  },
+  {
+    step: "9/12",
+    message: "RUN chown -R nextjs:nodejs /app",
+    type: "info" as const,
+  },
   { step: "10/12", message: "USER nextjs", type: "info" as const },
   { step: "11/12", message: "EXPOSE 3000", type: "info" as const },
   { step: "12/12", message: 'CMD ["npm", "start"]', type: "info" as const },
-  { step: "FINAL", message: "Successfully built 9e8f7a6b5c4d", type: "success" as const },
-  { step: "FINAL", message: "Successfully tagged johndoe/node-dev:latest", type: "success" as const },
-]
+  {
+    step: "FINAL",
+    message: "Successfully built 9e8f7a6b5c4d",
+    type: "success" as const,
+  },
+  {
+    step: "FINAL",
+    message: "Successfully tagged johndoe/node-dev:latest",
+    type: "success" as const,
+  },
+];
 
 export function DockerScriptExecutor({
   scriptId,
@@ -70,81 +139,86 @@ export function DockerScriptExecutor({
   onStatusChange,
   autoStart = false,
 }: DockerScriptExecutorProps) {
-  const [isExecuting, setIsExecuting] = useState(false)
-  const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([])
-  const [currentStep, setCurrentStep] = useState(0)
-  const [buildStatus, setBuildStatus] = useState<BuildStatus>("DRAFT")
-  const [progress, setProgress] = useState(0)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [buildStatus, setBuildStatus] = useState<BuildStatus>(
+    "DRAFT" as BuildStatus
+  );
+  const [progress, setProgress] = useState(0);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [executionLogs])
+  }, [executionLogs]);
 
   // Auto-start if requested
   useEffect(() => {
     if (autoStart && buildStatus === "DRAFT") {
-      handleStartExecution()
+      handleStartExecution();
     }
-  }, [autoStart, buildStatus])
+  }, [autoStart, buildStatus]);
 
   // Simulate build execution
   useEffect(() => {
-    if (!isExecuting) return
+    if (!isExecuting) return;
 
-    let stepIndex = 0
+    let stepIndex = 0;
 
     const executeStep = () => {
       if (stepIndex >= mockExecutionSteps.length) {
         // Build completed successfully
-        setBuildStatus("SUCCESS")
-        setIsExecuting(false)
-        setProgress(100)
-        onStatusChange?.("SUCCESS")
+        setBuildStatus("SUCCESS");
+        setIsExecuting(false);
+        setProgress(100);
+        onStatusChange?.("SUCCESS");
 
         const completionLog: ExecutionLog = {
           id: Date.now().toString(),
           timestamp: new Date(),
           step: "COMPLETE",
-          message: "✅ Docker image built and pushed successfully! Image is ready for deployment.",
+          message:
+            "✅ Docker image built and pushed successfully! Image is ready for deployment.",
           type: "success",
-        }
-        setExecutionLogs((prev) => [...prev, completionLog])
-        return
+        };
+        setExecutionLogs((prev) => [...prev, completionLog]);
+        return;
       }
 
-      const step = mockExecutionSteps[stepIndex]
+      const step = mockExecutionSteps[stepIndex];
       const newLog: ExecutionLog = {
         id: `${Date.now()}-${stepIndex}`,
         timestamp: new Date(),
         step: step.step,
         message: step.message,
         type: step.type,
-      }
+      };
 
-      setExecutionLogs((prev) => [...prev, newLog])
-      setCurrentStep(Math.floor(((stepIndex + 1) / mockExecutionSteps.length) * 12))
-      setProgress(((stepIndex + 1) / mockExecutionSteps.length) * 100)
+      setExecutionLogs((prev) => [...prev, newLog]);
+      setCurrentStep(
+        Math.floor(((stepIndex + 1) / mockExecutionSteps.length) * 12)
+      );
+      setProgress(((stepIndex + 1) / mockExecutionSteps.length) * 100);
 
-      stepIndex++
+      stepIndex++;
 
       // Continue to next step with realistic timing
-      setTimeout(executeStep, Math.random() * 1500 + 500)
-    }
+      setTimeout(executeStep, Math.random() * 1500 + 500);
+    };
 
-    executeStep()
-  }, [isExecuting, onStatusChange])
+    executeStep();
+  }, [isExecuting, onStatusChange]);
 
   const handleStartExecution = () => {
-    setIsExecuting(true)
-    setBuildStatus("BUILDING")
-    setExecutionLogs([])
-    setCurrentStep(0)
-    setProgress(0)
-    onStatusChange?.("BUILDING")
+    setIsExecuting(true);
+    setBuildStatus("BUILDING");
+    setExecutionLogs([]);
+    setCurrentStep(0);
+    setProgress(0);
+    onStatusChange?.("BUILDING");
 
     // Add initial log
     const startLog: ExecutionLog = {
@@ -153,14 +227,14 @@ export function DockerScriptExecutor({
       step: "INIT",
       message: `🚀 Starting Docker build for ${scriptName}...`,
       type: "info",
-    }
-    setExecutionLogs([startLog])
-  }
+    };
+    setExecutionLogs([startLog]);
+  };
 
   const handleStopExecution = () => {
-    setIsExecuting(false)
-    setBuildStatus("FAILED")
-    onStatusChange?.("FAILED")
+    setIsExecuting(false);
+    setBuildStatus("FAILED");
+    onStatusChange?.("FAILED");
 
     const stopLog: ExecutionLog = {
       id: Date.now().toString(),
@@ -168,70 +242,74 @@ export function DockerScriptExecutor({
       step: "STOP",
       message: "❌ Build execution stopped by user",
       type: "error",
-    }
-    setExecutionLogs((prev) => [...prev, stopLog])
-  }
+    };
+    setExecutionLogs((prev) => [...prev, stopLog]);
+  };
 
   const handleClearLogs = () => {
-    setExecutionLogs([])
-    setCurrentStep(0)
-    setProgress(0)
-    setBuildStatus("DRAFT")
-    onStatusChange?.("DRAFT")
-  }
+    setExecutionLogs([]);
+    setCurrentStep(0);
+    setProgress(0);
+    setBuildStatus("DRAFT");
+    onStatusChange?.("DRAFT");
+  };
 
   const handleDownloadLogs = () => {
     const logText = executionLogs
-      .map((log) => `[${log.timestamp.toISOString()}] ${log.step}: ${log.message}`)
-      .join("\n")
+      .map(
+        (log) => `[${log.timestamp.toISOString()}] ${log.step}: ${log.message}`
+      )
+      .join("\n");
 
-    const blob = new Blob([logText], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${scriptName}-build-logs-${new Date().toISOString().split("T")[0]}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([logText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${scriptName}-build-logs-${
+      new Date().toISOString().split("T")[0]
+    }.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusIcon = () => {
     switch (buildStatus) {
       case "BUILDING":
-        return <Clock className="h-4 w-4 text-yellow-500 animate-spin" />
+        return <Clock className="h-4 w-4 text-yellow-500 animate-spin" />;
       case "SUCCESS":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case "FAILED":
-        return <XCircle className="h-4 w-4 text-red-500" />
+        return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />
+        return <Activity className="h-4 w-4 text-gray-500" />;
     }
-  }
+  };
 
   const getLogIcon = (type: ExecutionLog["type"]) => {
     switch (type) {
       case "success":
-        return "✅"
+        return "✅";
       case "error":
-        return "❌"
+        return "❌";
       case "warning":
-        return "⚠️"
+        return "⚠️";
       default:
-        return "ℹ️"
+        return "ℹ️";
     }
-  }
+  };
 
   const getLogColor = (type: ExecutionLog["type"]) => {
     switch (type) {
       case "success":
-        return "text-green-600"
+        return "text-green-600";
       case "error":
-        return "text-red-600"
+        return "text-red-600";
       case "warning":
-        return "text-yellow-600"
+        return "text-yellow-600";
       default:
-        return "text-blue-600"
+        return "text-blue-600";
     }
-  }
+  };
 
   return (
     <Card className="h-[600px] flex flex-col">
@@ -241,12 +319,17 @@ export function DockerScriptExecutor({
             {getStatusIcon()}
             <div>
               <CardTitle className="text-lg">Build Execution</CardTitle>
-              <CardDescription>Real-time Docker build logs for {scriptName}</CardDescription>
+              <CardDescription>
+                Real-time Docker build logs for {scriptName}
+              </CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {!isExecuting ? (
-              <Button onClick={handleStartExecution} disabled={buildStatus === "BUILDING"}>
+              <Button
+                onClick={handleStartExecution}
+                disabled={buildStatus === "BUILDING"}
+              >
                 <Play className="h-4 w-4 mr-2" />
                 Run Build
               </Button>
@@ -256,10 +339,20 @@ export function DockerScriptExecutor({
                 Stop
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleClearLogs} disabled={isExecuting}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearLogs}
+              disabled={isExecuting}
+            >
               <RotateCcw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadLogs} disabled={executionLogs.length === 0}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadLogs}
+              disabled={executionLogs.length === 0}
+            >
               <Download className="h-4 w-4" />
             </Button>
           </div>
@@ -283,15 +376,19 @@ export function DockerScriptExecutor({
               buildStatus === "SUCCESS"
                 ? "default"
                 : buildStatus === "BUILDING"
-                  ? "secondary"
-                  : buildStatus === "FAILED"
-                    ? "destructive"
-                    : "outline"
+                ? "secondary"
+                : buildStatus === "FAILED"
+                ? "destructive"
+                : "outline"
             }
           >
             {buildStatus}
           </Badge>
-          {buildStatus === "BUILDING" && <span className="text-sm text-muted-foreground">Step {currentStep}/12</span>}
+          {buildStatus === "BUILDING" && (
+            <span className="text-sm text-muted-foreground">
+              Step {currentStep}/12
+            </span>
+          )}
         </div>
       </CardHeader>
 
@@ -304,7 +401,9 @@ export function DockerScriptExecutor({
               <div className="text-center text-muted-foreground py-8">
                 <Play className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>Click "Run Build" to start the Docker build process</p>
-                <p className="text-sm">Real-time logs will appear here during execution</p>
+                <p className="text-sm">
+                  Real-time logs will appear here during execution
+                </p>
               </div>
             ) : (
               executionLogs.map((log) => (
@@ -315,11 +414,16 @@ export function DockerScriptExecutor({
                   <span className="text-muted-foreground text-xs whitespace-nowrap">
                     {log.timestamp.toLocaleTimeString()}
                   </span>
-                  <Badge variant="outline" className="text-xs font-mono min-w-[60px] justify-center">
+                  <Badge
+                    variant="outline"
+                    className="text-xs font-mono min-w-[60px] justify-center"
+                  >
                     {log.step}
                   </Badge>
                   <span className="text-xs">{getLogIcon(log.type)}</span>
-                  <span className={`flex-1 ${getLogColor(log.type)} break-all`}>{log.message}</span>
+                  <span className={`flex-1 ${getLogColor(log.type)} break-all`}>
+                    {log.message}
+                  </span>
                 </div>
               ))
             )}
@@ -327,5 +431,5 @@ export function DockerScriptExecutor({
         </ScrollArea>
       </CardContent>
     </Card>
-  )
+  );
 }

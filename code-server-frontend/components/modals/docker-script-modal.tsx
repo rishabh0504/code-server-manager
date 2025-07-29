@@ -1,7 +1,7 @@
 "use client";
 
-import type React from "react";
-import { useState, useEffect } from "react";
+import { API_END_POINTS } from "@/common/constant";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { BuildStatus } from "@/lib/types";
+import { useFetch } from "@/hooks/use-fetch";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface DockerScriptModalProps {
   isOpen: boolean;
@@ -29,54 +23,62 @@ interface DockerScriptModalProps {
   script?: any;
 }
 
-// Mock credentials
-const mockCredentials = [
-  { id: "1", name: "Docker Hub Registry" },
-  { id: "2", name: "GitHub Container Registry" },
-  { id: "3", name: "GitLab Registry" },
-];
-
 export function DockerScriptModal({
   isOpen,
   onClose,
   script,
 }: DockerScriptModalProps) {
+  const {
+    data,
+    loading,
+    post: createDockerScripts,
+    put: updateDockerScripts,
+  } = useFetch({
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.create}`,
+  });
+
   const [formData, setFormData] = useState({
     name: "",
-    script: "",
-    credentialId: "",
-    registryUrl: "",
-    tag: "latest",
-    buildStatus: "DRAFT" as BuildStatus,
+    dockerFile: "",
+    description: "",
+    tag: "",
   });
 
   useEffect(() => {
     if (script) {
       setFormData({
         name: script.name || "",
-        script: script.script || "",
-        credentialId: script.credentialId || "",
-        registryUrl: script.registryUrl || "",
-        tag: script.tag || "latest",
-        buildStatus: script.buildStatus || "DRAFT",
+        dockerFile: script.dockerFile || "",
+        description: script.description || "",
+        tag: script.tag || "",
       });
     } else {
       setFormData({
         name: "",
-        script:
-          'FROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\nCMD ["npm", "start"]',
-        credentialId: "",
-        registryUrl: "",
-        tag: "latest",
-        buildStatus: "DRAFT" as BuildStatus,
+        dockerFile: "# This should be your docker script",
+        description: "",
+        tag: "",
       });
     }
   }, [script]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    onClose();
+    let response;
+    if (script) {
+      response = await updateDockerScripts(
+        formData,
+        `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.update}/${script?.id}`
+      );
+    } else {
+      response = await createDockerScripts(formData);
+    }
+    if (response.status === "success") {
+      console.log("docker script created:", formData);
+      onClose();
+    } else {
+      console.error("Credential creation failed:", formData);
+    }
   };
 
   return (
@@ -86,11 +88,11 @@ export function DockerScriptModal({
           <DialogTitle>
             {script ? "Edit Docker Script" : "Create New Docker Script"}
           </DialogTitle>
-          {/* <DialogDescription>
+          <DialogDescription>
             {script
               ? "Update the Docker script configuration."
               : "Create a new Docker build script."}
-          </DialogDescription> */}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
@@ -98,7 +100,7 @@ export function DockerScriptModal({
             {/* Left Column (1/3 width on md+) */}
             <div className="space-y-4 col-span-1">
               <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Image Name</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -109,72 +111,29 @@ export function DockerScriptModal({
                   required
                 />
               </div>
-
               <div className="grid gap-2">
-                <Label htmlFor="credential">Credential</Label>
-                <Select
-                  value={formData.credentialId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, credentialId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select credential" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockCredentials.map((cred) => (
-                      <SelectItem key={cred.id} value={cred.id}>
-                        {cred.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="registryUrl">Registry URL</Label>
+                <Label htmlFor="description">Docker Image Description</Label>
                 <Input
-                  id="registryUrl"
-                  value={formData.registryUrl}
+                  id="description"
+                  value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, registryUrl: e.target.value })
+                    setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="e.g. docker.io/username/image"
+                  placeholder="Node.js Dev description"
                   required
                 />
               </div>
-
               <div className="grid gap-2">
-                <Label htmlFor="tag">Tag</Label>
+                <Label htmlFor="description">Tag </Label>
                 <Input
                   id="tag"
                   value={formData.tag}
                   onChange={(e) =>
                     setFormData({ ...formData, tag: e.target.value })
                   }
-                  placeholder="latest"
+                  placeholder="Tag name"
                   required
                 />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="buildStatus">Build Status</Label>
-                <Select
-                  value={formData.buildStatus}
-                  onValueChange={(value: BuildStatus) =>
-                    setFormData({ ...formData, buildStatus: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="BUILDING">Building</SelectItem>
-                    <SelectItem value="SUCCESS">Success</SelectItem>
-                    <SelectItem value="FAILED">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
@@ -183,9 +142,9 @@ export function DockerScriptModal({
               <Label htmlFor="script">Dockerfile</Label>
               <Textarea
                 id="script"
-                value={formData.script}
+                value={formData.dockerFile}
                 onChange={(e) =>
-                  setFormData({ ...formData, script: e.target.value })
+                  setFormData({ ...formData, dockerFile: e.target.value })
                 }
                 className="font-mono text-sm h-full min-h-[370px]"
                 placeholder="FROM node:18-alpine..."
