@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.db.db import connect_db, disconnect_db
 from app.api.models.response import SuccessResponse
-from app.api.v1 import code_server, template_scripts, credentials
+from app.api.v1 import code_server, template_scripts, credentials, docker_script
 
 origins = [
     "http://localhost:3000"
@@ -28,7 +28,7 @@ app = FastAPI(
 app.include_router(code_server.code_server_router)
 app.include_router(template_scripts.template_scripts_router)
 app.include_router(credentials.credential_router)
-
+app.include_router(docker_script.docker_script_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
