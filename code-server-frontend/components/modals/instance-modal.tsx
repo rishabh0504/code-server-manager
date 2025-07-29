@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,27 +10,37 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { InstanceStatus } from "@/lib/types"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { InstanceStatus } from "@/lib/types";
 
 interface InstanceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  instance?: any
+  isOpen: boolean;
+  onClose: () => void;
+  instance?: any;
 }
 
-export function InstanceModal({ isOpen, onClose, instance }: InstanceModalProps) {
+export function InstanceModal({
+  isOpen,
+  onClose,
+  instance,
+}: InstanceModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     port: "",
     url: "",
     status: "PENDING" as InstanceStatus,
     image: "codercom/code-server:latest",
-  })
+  });
 
   useEffect(() => {
     if (instance) {
@@ -40,7 +50,7 @@ export function InstanceModal({ isOpen, onClose, instance }: InstanceModalProps)
         url: instance.url || "",
         status: instance.status || "PENDING",
         image: instance.image || "codercom/code-server:latest",
-      })
+      });
     } else {
       setFormData({
         name: "",
@@ -48,75 +58,79 @@ export function InstanceModal({ isOpen, onClose, instance }: InstanceModalProps)
         url: "",
         status: "PENDING",
         image: "codercom/code-server:latest",
-      })
+      });
     }
-  }, [instance])
+  }, [instance]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle form submission here
-    console.log("Form submitted:", formData)
-    onClose()
-  }
+    console.log("Form submitted:", formData);
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{instance ? "Edit Instance" : "Create New Instance"}</DialogTitle>
+          <DialogTitle>
+            {instance ? "Edit Instance" : "Create New Instance"}
+          </DialogTitle>
           <DialogDescription>
-            {instance ? "Update the code server instance details." : "Create a new code server instance."}
+            {instance
+              ? "Update the code server instance details."
+              : "Create a new code server instance."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="col-span-3"
                 placeholder="Development Server"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="port" className="text-right">
-                Port
-              </Label>
+              <Label htmlFor="port">Port</Label>
               <Input
                 id="port"
                 type="number"
                 value={formData.port}
-                onChange={(e) => setFormData({ ...formData, port: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, port: e.target.value })
+                }
                 className="col-span-3"
                 placeholder="8080"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="url" className="text-right">
-                URL
-              </Label>
+              <Label htmlFor="url">URL</Label>
               <Input
                 id="url"
                 value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, url: e.target.value })
+                }
                 className="col-span-3"
                 placeholder="https://dev.example.com"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
-                Status
-              </Label>
+              <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: InstanceStatus) => setFormData({ ...formData, status: value })}
+                onValueChange={(value: InstanceStatus) =>
+                  setFormData({ ...formData, status: value })
+                }
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select status" />
@@ -132,13 +146,13 @@ export function InstanceModal({ isOpen, onClose, instance }: InstanceModalProps)
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Image
-              </Label>
+              <Label htmlFor="image">Image</Label>
               <Input
                 id="image"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
                 className="col-span-3"
                 placeholder="codercom/code-server:latest"
               />
@@ -148,10 +162,12 @@ export function InstanceModal({ isOpen, onClose, instance }: InstanceModalProps)
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">{instance ? "Update" : "Create"} Instance</Button>
+            <Button type="submit">
+              {instance ? "Update" : "Create"} Instance
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

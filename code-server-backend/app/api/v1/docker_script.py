@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import OrderedDict
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from app.api.models.response import SuccessResponse
@@ -6,6 +7,9 @@ from app.api.models.docker_scripts import CreateDockerScript, UpdateDockerScript
 from app.api.db.db import prisma
 from app.api.utils.logger_utils import get_logger
 from app.api.utils.docker_utils import log_generator
+from prisma.enums import BuildStatus
+from prisma.models import BuildInfo
+
 logger = get_logger("DockerScripts")
 
 docker_script_router = APIRouter(prefix="/docker-scripts", tags=["Docker Image Scripts"])
@@ -92,4 +96,16 @@ async def stream_docker_build_logs(script_id: str):
 
     except Exception as e:
         logger.error(f"Error streaming Docker build logs: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    
+@docker_script_router.get("/docker-images", response_model=SuccessResponse)
+async def get_docker_images():
+    try:
+        existing = await prisma.buildinfo.find_many(include={"dockerScript": True})
+        logger.info(f"Found {len(existing)} build info records")
+        for build in existing:
+            logger.info(f"Build: {build.dict()}")
+        return SuccessResponse(data=[b.dict() for b in existing], status_code=200)
+    except Exception as e:
+        logger.error(f"Error fetching docker images: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
