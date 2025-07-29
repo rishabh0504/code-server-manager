@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFetchStream } from "@/hooks/use-fetch-stream";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,23 @@ const DockerExecutorLogs: React.FC<DockerExecutorLogsProps> = ({
   scriptId,
 }) => {
   const { data, loading, error, fetchStream, abort } = useFetchStream();
+  const [id, setId] = useState<string | undefined>();
+  useEffect(() => {
+    if (scriptId && id !== scriptId) {
+      setId(scriptId);
+    }
+  }, [scriptId]);
 
   useEffect(() => {
-    if (scriptId) {
+    if (id) {
       fetchStream(
-        `${process.env.NEXT_PUBLIC_BASE_API_POINT}/docker-scripts/${scriptId}/build-image`,
+        `${process.env.NEXT_PUBLIC_BASE_API_POINT}/docker-scripts/${id}/build-image`,
         {
           method: "GET",
         }
       );
     }
-  }, [scriptId]);
+  }, [id]);
 
   return (
     <Card className="w-full max-w-4xl mx-auto my-6">
