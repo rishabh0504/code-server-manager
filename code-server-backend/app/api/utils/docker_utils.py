@@ -1,8 +1,12 @@
 from io import BytesIO
-from typing import List
+from typing import AsyncGenerator, List
 import docker
 from fastapi import HTTPException, status
 from app.api.utils.logger_utils import get_logger
+from datetime import datetime
+from prisma.enums import BuildStatus
+
+from app.api.db.db import prisma
 
 logger = get_logger('DockerUtils')
 
@@ -39,10 +43,46 @@ def perform_docker_actions(container_name: str, commands: List[str], user:str):
             detail="Something went wrong while running docker actions"
         )
 
-def log_generator(fileobj: BytesIO, tag:str):
+async def log_generator(fileobj: BytesIO, tag: str, dockerScriptId: str) -> AsyncGenerator[str, None]:
+    started_at = datetime.now()
+    completed_at = None
+    build_status = None
+    image_tag = tag
+    already_logged = False
+
+    async def safe_log():
+        nonlocal already_logged
+        if already_logged:
+            return
+        already_logged = True
+        try:
+            await prisma.buildinfo.create(
+                data={
+                    "dockerScriptId": dockerScriptId,
+                    "status": build_status or BuildStatus.FAILED.value,
+                    "imageTag": image_tag,
+                    "startedAt": started_at,
+                    "completedAt": completed_at or datetime.now(),
+                }
+            )
+        except Exception as log_err:
+            print(f"[ERROR] Failed to log buildinfo: {log_err}")
+
     try:
         for chunk in client.api.build(fileobj=fileobj, rm=True, decode=True, pull=True, tag=tag):
             if 'stream' in chunk:
                 yield chunk['stream']
+
+        build_status = BuildStatus.SUCCESS.value
+        completed_at = datetime.now()
+        await safe_log()
+
     except Exception as e:
-        yield f"Error: {str(e)}\n"
+        build_status = BuildStatus.FAILED.value
+        completed_at = datetime.now()
+        yield f"\n[Build Failed] {str(e)}\n"
+        await safe_log()
+
+    finally:
+        await safe_log()
+    

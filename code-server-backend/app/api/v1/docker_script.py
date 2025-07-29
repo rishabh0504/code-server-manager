@@ -88,7 +88,7 @@ async def stream_docker_build_logs(script_id: str):
             raise HTTPException(status_code=404, detail="Script not found")
 
         fileobj = BytesIO(script.dockerFile.encode('utf-8'))
-        return StreamingResponse(log_generator(fileobj = fileobj,tag = script.tag), media_type="application/octet-stream")
+        return StreamingResponse(log_generator(fileobj = fileobj,tag = script.tag, dockerScriptId=script.id), media_type="application/octet-stream")
 
     except Exception as e:
         logger.error(f"Error streaming Docker build logs: {e}")

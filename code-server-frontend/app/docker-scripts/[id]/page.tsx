@@ -1,7 +1,6 @@
 "use client";
 
 import { API_END_POINTS } from "@/common/constant";
-import { DockerScriptExecutor } from "@/components/docker-script-executor";
 import DockerExecutorLogs from "@/components/modals/docker-executor-logs";
 import { DockerScriptModal } from "@/components/modals/docker-script-modal";
 import { Button } from "@/components/ui/button";
@@ -48,23 +47,7 @@ export default function DockerScriptDetailPage() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [dockerScript, setDockerScript] = useState<DockerScript | undefined>();
 
-  // const {
-  //   data: streamedData,
-  //   loading: streamLoading,
-  //   error,
-  //   abort,
-  // } = useFetchStream(
-  //   `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.read}`,
-  //   {
-  //     method: "GET",
-  //   }
-  // );
-
-  const {
-    data,
-    loading,
-    get: fetchDockerScriptById,
-  } = useFetch({
+  const { get: fetchDockerScriptById } = useFetch({
     url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.read}`,
   });
 
@@ -79,7 +62,6 @@ export default function DockerScriptDetailPage() {
   useEffect(() => {
     loadDockerScripts();
   }, []);
-  // const script = getDockerScript(scriptId);
 
   const handleEdit = () => {
     setIsModalOpen(true);
@@ -328,15 +310,6 @@ export default function DockerScriptDetailPage() {
           {/* Right Column - Execution Logs */}
           <div>
             {dockerScript && isExecuting ? (
-              // <DockerScriptExecutor
-              //   scriptId={dockerScript.id}
-              //   scriptName={dockerScript.name}
-              //   onStatusChange={(status) => {
-              //     if (status !== "BUILDING") {
-              //       setIsExecuting(false);
-              //     }
-              //   }}
-              // />
               <DockerExecutorLogs scriptId={dockerScript.id} />
             ) : (
               <Card className="h-[600px] flex flex-col">
