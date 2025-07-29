@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CodeServerInstance {
+  id        String         @id @default(uuid())
+  name      String
+  port      Int            @unique
+  url       String
+  status    InstanceStatus @default(PENDING)
+  image     String?        
+
+  activities ActivityLogger[]
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model ActivityLogger {
+  id             String              @id @default(uuid())
+  codeServerId   String
+  codeServer     CodeServerInstance @relation(fields: [codeServerId], references: [id])
+  message        String
+  level          LogLevel           @default(INFO)
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model Credentials {
+  id        String         @id @default(uuid())
+  name      String
+  type      CredentialType
+  baseUrl   String
+  username  String
+  email     String
+  token     String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+
+model DockerScript {
+  id          String       @id @default(uuid())
+  dockerFile  String
+  name        String
+  builds      BuildInfo[]  // One-to-many: a script can have many builds
+  createdAt   DateTime     @default(now())
+}
+
+model BuildInfo {
+  id             String        @id @default(uuid())
+  dockerScript   DockerScript @relation(fields: [dockerScriptId], references: [id])
+  dockerScriptId String
+
+  status         BuildStatus   @default(PENDING)
+  logs           String        @default("")
+  imageTag       String?       // Optional: e.g., "my-image:latest"
+  errorMessage   String?
+  startedAt      DateTime      @default(now())
+  completedAt    DateTime?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum BuildStatus {
+  PENDING
+  BUILDING
+  SUCCESS
+  FAILED
+}
+
+enum CredentialType {
+  GITHUB
+  GITLAB
+  JIRA
+  CONFLUENCES
+  DOCKERHUB
+  GITHUB_CONTAINER
+}
+
+enum InstanceStatus {
+  PENDING
+  RUNNING
+  PAUSED
+  STOPPED
+  TERMINATED
+  ERROR
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARNING
+  ERROR
+}

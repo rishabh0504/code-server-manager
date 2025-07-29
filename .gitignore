@@ -1,0 +1,51 @@
+# Ignore Python cache and environments for backend
+code-server-backend/__pycache__/
+code-server-backend/**/*.py[cod]
+code-server-backend/.venv/
+code-server-backend/env/
+code-server-backend/.env
+code-server-backend/.mypy_cache/
+code-server-backend/.pytest_cache/
+code-server-backend/.coverage
+code-server-backend/.ruff_cache/
+code-server-backend/.idea/
+code-server-backend/.vscode/
+code-server-backend/.DS_Store
+
+# Ignore compiled and docker output
+code-server-backend/dist/
+code-server-backend/build/
+code-server-backend/docker_cache/
+
+# Ignore Prisma generated files if used
+code-server-backend/prisma/migrations/
+code-server-backend/prisma/dev.db
+code-server-backend/prisma/.env
+
+# Ignore frontend Next.js build artifacts
+code-server-frontend/.next/
+code-server-frontend/out/
+code-server-frontend/node_modules/
+code-server-frontend/.env*
+code-server-frontend/.vercel/
+code-server-frontend/.idea/
+code-server-frontend/.vscode/
+code-server-frontend/.DS_Store
+code-server-frontend/npm-debug.log*
+code-server-frontend/yarn-debug.log*
+code-server-frontend/yarn-error.log*
+
+# Ignore log and lock files globally
+**/*.log
+**/package-lock.json
+**/pnpm-lock.yaml
+**/yarn.lock
+
+# Ignore Docker artifacts (if built locally)
+**/docker-image.tar
+**/.docker/
+
+# macOS and editor system files
+.DS_Store
+Thumbs.db
+*.swp

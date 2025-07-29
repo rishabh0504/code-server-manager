@@ -1,0 +1,7 @@
+uvicorn
+fastapi
+pydantic
+prisma
+python-dotenv
+colorlog
+docker
