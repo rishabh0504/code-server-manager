@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { API_END_POINTS } from "@/common/constant";
+import { CredentialModal } from "@/components/modals/credential-modal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,18 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,53 +19,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
-  Plus,
-  Search,
-  MoreHorizontal,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useFetch } from "@/hooks/use-fetch";
+import type { Credentials, CredentialType } from "@/lib/types";
+import {
   Edit,
-  Trash2,
   Eye,
   EyeOff,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
 } from "lucide-react";
-import { CredentialModal } from "@/components/modals/credential-modal";
-import type { Credentials, CredentialType } from "@/lib/types";
-import { useFetch } from "@/hooks/use-fetch";
-import { API_END_POINTS } from "@/common/constant";
-
-// Mock data
-const credentials = [
-  {
-    id: "1",
-    type: "GITHUB" as CredentialType,
-    name: "GitHub Main Account",
-    baseUrl: "https://github.com",
-    username: "john.doe",
-    email: "john.doe@example.com",
-    token: "ghp_xxxxxxxxxxxxxxxxxxxx",
-    createdAt: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    type: "DOCKERHUB" as CredentialType,
-    name: "Docker Hub Registry",
-    baseUrl: "https://hub.docker.com",
-    username: "johndoe",
-    email: "john.doe@example.com",
-    token: "dckr_pat_xxxxxxxxxxxxxxxxxxxx",
-    createdAt: new Date("2024-01-16"),
-  },
-  {
-    id: "3",
-    type: "GITLAB" as CredentialType,
-    name: "GitLab Enterprise",
-    baseUrl: "https://gitlab.company.com",
-    username: "j.doe",
-    email: "john.doe@company.com",
-    token: "glpat-xxxxxxxxxxxxxxxxxxxx",
-    createdAt: new Date("2024-01-17"),
-  },
-];
+import { useEffect, useState } from "react";
 
 function getTypeBadge(type: CredentialType) {
   const colors: Record<CredentialType, string> = {
@@ -155,7 +121,7 @@ export default function CredentialsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen px-4">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
@@ -178,7 +144,7 @@ export default function CredentialsPage() {
         </div>
       </header>
 
-      <main className="flex-1 space-y-6 p-6">
+      <main className="flex-1 space-y-4 p-10">
         <Card>
           <CardHeader>
             <CardTitle>Credentials ({filteredCredentials.length})</CardTitle>

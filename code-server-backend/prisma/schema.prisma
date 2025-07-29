@@ -52,6 +52,7 @@ model DockerScript {
   name        String
   builds      BuildInfo[]  // One-to-many: a script can have many builds
   createdAt   DateTime     @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model BuildInfo {

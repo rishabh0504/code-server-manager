@@ -1,14 +1,33 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
-import type { LogLevel } from "@/lib/types"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Filter } from "lucide-react";
+import type { LogLevel } from "@/lib/types";
 
 // Realistic code server logs
 const activities = [
@@ -16,7 +35,8 @@ const activities = [
     id: "1",
     codeServerId: "1",
     codeServerName: "Development Server",
-    message: "[2024-01-20 10:30:15] HTTP server listening on http://0.0.0.0:8080",
+    message:
+      "[2024-01-20 10:30:15] HTTP server listening on http://0.0.0.0:8080",
     level: "INFO" as LogLevel,
     createdAt: new Date("2024-01-20T10:30:15"),
   },
@@ -24,7 +44,8 @@ const activities = [
     id: "2",
     codeServerId: "1",
     codeServerName: "Development Server",
-    message: "[2024-01-20 10:30:12] Using config file ~/.config/code-server/config.yaml",
+    message:
+      "[2024-01-20 10:30:12] Using config file ~/.config/code-server/config.yaml",
     level: "INFO" as LogLevel,
     createdAt: new Date("2024-01-20T10:30:12"),
   },
@@ -32,7 +53,8 @@ const activities = [
     id: "3",
     codeServerId: "2",
     codeServerName: "Testing Environment",
-    message: "[2024-01-20 10:25:30] Error: listen EADDRINUSE: address already in use :::8081",
+    message:
+      "[2024-01-20 10:25:30] Error: listen EADDRINUSE: address already in use :::8081",
     level: "ERROR" as LogLevel,
     createdAt: new Date("2024-01-20T10:25:30"),
   },
@@ -40,7 +62,8 @@ const activities = [
     id: "4",
     codeServerId: "1",
     codeServerName: "Development Server",
-    message: "[2024-01-20 10:30:10] info  code-server 4.19.1 de41646fc402b968ca6d555fdf2da7de9554d28a",
+    message:
+      "[2024-01-20 10:30:10] info  code-server 4.19.1 de41646fc402b968ca6d555fdf2da7de9554d28a",
     level: "INFO" as LogLevel,
     createdAt: new Date("2024-01-20T10:30:10"),
   },
@@ -56,7 +79,8 @@ const activities = [
     id: "6",
     codeServerId: "2",
     codeServerName: "Testing Environment",
-    message: "[2024-01-20 10:25:25] Starting code-server with args: --bind-addr 0.0.0.0:8081 --auth password",
+    message:
+      "[2024-01-20 10:25:25] Starting code-server with args: --bind-addr 0.0.0.0:8081 --auth password",
     level: "INFO" as LogLevel,
     createdAt: new Date("2024-01-20T10:25:25"),
   },
@@ -64,7 +88,8 @@ const activities = [
     id: "7",
     codeServerId: "1",
     codeServerName: "Development Server",
-    message: "[2024-01-20 10:28:33] WebSocket connection established from 192.168.1.100",
+    message:
+      "[2024-01-20 10:28:33] WebSocket connection established from 192.168.1.100",
     level: "DEBUG" as LogLevel,
     createdAt: new Date("2024-01-20T10:28:33"),
   },
@@ -80,7 +105,8 @@ const activities = [
     id: "9",
     codeServerId: "2",
     codeServerName: "Testing Environment",
-    message: "[2024-01-20 10:24:15] Installing extension ms-python.python@2023.20.0",
+    message:
+      "[2024-01-20 10:24:15] Installing extension ms-python.python@2023.20.0",
     level: "INFO" as LogLevel,
     createdAt: new Date("2024-01-20T10:24:15"),
   },
@@ -88,48 +114,53 @@ const activities = [
     id: "10",
     codeServerId: "1",
     codeServerName: "Development Server",
-    message: "[2024-01-20 10:27:22] File watcher error: ENOSPC: System limit for number of file watchers reached",
+    message:
+      "[2024-01-20 10:27:22] File watcher error: ENOSPC: System limit for number of file watchers reached",
     level: "WARNING" as LogLevel,
     createdAt: new Date("2024-01-20T10:27:22"),
   },
-]
+];
 
 function getLevelBadge(level: LogLevel) {
-  const variants: Record<LogLevel, "default" | "secondary" | "destructive" | "outline"> = {
+  const variants: Record<
+    LogLevel,
+    "default" | "secondary" | "destructive" | "outline"
+  > = {
     INFO: "default",
     WARNING: "secondary",
     ERROR: "destructive",
     DEBUG: "outline",
-  }
+  };
 
   const colors: Record<LogLevel, string> = {
     INFO: "bg-blue-100 text-blue-800",
     WARNING: "bg-yellow-100 text-yellow-800",
     ERROR: "bg-red-100 text-red-800",
     DEBUG: "bg-gray-100 text-gray-800",
-  }
+  };
 
   return (
     <Badge variant={variants[level]} className={colors[level]}>
       {level}
     </Badge>
-  )
+  );
 }
 
 export default function ActivitiesPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [levelFilter, setLevelFilter] = useState<string>("all")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
 
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =
       activity.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.codeServerName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesLevel = levelFilter === "all" || activity.level === levelFilter
-    return matchesSearch && matchesLevel
-  })
+      activity.codeServerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel =
+      levelFilter === "all" || activity.level === levelFilter;
+    return matchesSearch && matchesLevel;
+  });
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen px-4">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
@@ -165,7 +196,9 @@ export default function ActivitiesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Activity Logs ({filteredActivities.length})</CardTitle>
-            <CardDescription>Real-time logs and events from your code server instances</CardDescription>
+            <CardDescription>
+              Real-time logs and events from your code server instances
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -180,9 +213,13 @@ export default function ActivitiesPage() {
               <TableBody>
                 {filteredActivities.map((activity) => (
                   <TableRow key={activity.id}>
-                    <TableCell className="font-mono text-sm">{activity.createdAt.toLocaleString()}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {activity.createdAt.toLocaleString()}
+                    </TableCell>
                     <TableCell>{getLevelBadge(activity.level)}</TableCell>
-                    <TableCell className="font-medium">{activity.codeServerName}</TableCell>
+                    <TableCell className="font-medium">
+                      {activity.codeServerName}
+                    </TableCell>
                     <TableCell className="max-w-md">
                       <span className="break-words">{activity.message}</span>
                     </TableCell>
@@ -194,5 +231,5 @@ export default function ActivitiesPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

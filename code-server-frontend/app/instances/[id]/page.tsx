@@ -1,12 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -29,12 +35,12 @@ import {
   ImageIcon,
   Activity,
   Settings,
-} from "lucide-react"
-import Link from "next/link"
-import { useParams } from "next/navigation"
-import { LogViewer } from "@/components/log-viewer"
-import { InstanceModal } from "@/components/modals/instance-modal"
-import type { InstanceStatus } from "@/lib/types"
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { LogViewer } from "@/components/log-viewer";
+import { InstanceModal } from "@/components/modals/instance-modal";
+import type { InstanceStatus } from "@/lib/types";
 
 // Mock data - in real app, this would come from API
 const getInstance = (id: string) => ({
@@ -64,7 +70,7 @@ const getInstance = (id: string) => ({
     { host: "code-server-data", container: "/home/coder", type: "volume" },
   ],
   networks: ["bridge", "code-server-network"],
-})
+});
 
 const getRecentActivities = () => [
   {
@@ -88,17 +94,20 @@ const getRecentActivities = () => [
     message: "WebSocket connection established from 192.168.1.100",
     source: "websocket",
   },
-]
+];
 
 function getStatusBadge(status: InstanceStatus) {
-  const variants: Record<InstanceStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  const variants: Record<
+    InstanceStatus,
+    "default" | "secondary" | "destructive" | "outline"
+  > = {
     RUNNING: "default",
     PENDING: "secondary",
     PAUSED: "outline",
     STOPPED: "outline",
     TERMINATED: "destructive",
     ERROR: "destructive",
-  }
+  };
 
   const colors: Record<InstanceStatus, string> = {
     RUNNING: "bg-green-100 text-green-800",
@@ -107,29 +116,29 @@ function getStatusBadge(status: InstanceStatus) {
     STOPPED: "bg-gray-100 text-gray-800",
     TERMINATED: "bg-red-100 text-red-800",
     ERROR: "bg-red-100 text-red-800",
-  }
+  };
 
   return (
     <Badge variant={variants[status]} className={colors[status]}>
       {status}
     </Badge>
-  )
+  );
 }
 
 export default function InstanceDetailPage() {
-  const params = useParams()
-  const instanceId = params.id as string
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const params = useParams();
+  const instanceId = params.id as string;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const instance = getInstance(instanceId)
-  const recentActivities = getRecentActivities()
+  const instance = getInstance(instanceId);
+  const recentActivities = getRecentActivities();
 
   const handleEdit = () => {
-    setIsModalOpen(true)
-  }
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen px-4">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
         <Button variant="ghost" size="sm" asChild>
@@ -205,7 +214,9 @@ export default function InstanceDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{instance.status}</div>
-                  <p className="text-xs text-muted-foreground">Uptime: {instance.uptime}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Uptime: {instance.uptime}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -233,12 +244,16 @@ export default function InstanceDetailPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Resources</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Resources
+                  </CardTitle>
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{instance.cpu}</div>
-                  <p className="text-xs text-muted-foreground">{instance.memory} RAM</p>
+                  <p className="text-xs text-muted-foreground">
+                    {instance.memory} RAM
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -248,36 +263,56 @@ export default function InstanceDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Instance Details</CardTitle>
-                  <CardDescription>Basic information about this code server instance</CardDescription>
+                  <CardDescription>
+                    Basic information about this code server instance
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Name</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Name
+                      </p>
                       <p className="text-sm">{instance.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Image</p>
-                      <code className="text-xs bg-muted px-1 py-0.5 rounded">{instance.image}</code>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Image
+                      </p>
+                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                        {instance.image}
+                      </code>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Storage</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Storage
+                      </p>
                       <p className="text-sm">{instance.storage}</p>
                     </div>
                   </div>
                   <Separator />
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Created</p>
-                      <p className="text-sm">{instance.createdAt.toLocaleString()}</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Created
+                      </p>
+                      <p className="text-sm">
+                        {instance.createdAt.toLocaleString()}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                      <p className="text-sm">{instance.updatedAt.toLocaleString()}</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Last Updated
+                      </p>
+                      <p className="text-sm">
+                        {instance.updatedAt.toLocaleString()}
+                      </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Description</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Description
+                    </p>
                     <p className="text-sm">{instance.description}</p>
                   </div>
                 </CardContent>
@@ -287,20 +322,29 @@ export default function InstanceDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest events from this instance</CardDescription>
+                  <CardDescription>
+                    Latest events from this instance
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {recentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3 text-sm">
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 text-sm"
+                      >
                         <div className="flex-shrink-0">
                           <Badge variant="outline" className="text-xs">
                             {activity.level}
                           </Badge>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-mono text-xs bg-muted/50 p-2 rounded break-all">{activity.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{activity.timestamp.toLocaleString()}</p>
+                          <p className="font-mono text-xs bg-muted/50 p-2 rounded break-all">
+                            {activity.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {activity.timestamp.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -320,16 +364,25 @@ export default function InstanceDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Environment Variables</CardTitle>
-                  <CardDescription>Environment configuration for this instance</CardDescription>
+                  <CardDescription>
+                    Environment configuration for this instance
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {Object.entries(instance.environment).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between py-2 border-b last:border-0">
-                        <code className="text-sm font-medium">{key}</code>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">{value}</code>
-                      </div>
-                    ))}
+                    {Object.entries(instance.environment).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between py-2 border-b last:border-0"
+                        >
+                          <code className="text-sm font-medium">{key}</code>
+                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                            {value}
+                          </code>
+                        </div>
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -338,7 +391,9 @@ export default function InstanceDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Volume Mounts</CardTitle>
-                  <CardDescription>Mounted volumes and storage configuration</CardDescription>
+                  <CardDescription>
+                    Mounted volumes and storage configuration
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -350,11 +405,15 @@ export default function InstanceDetailPage() {
                         <div className="space-y-1 text-sm">
                           <div>
                             <span className="font-medium">Host:</span>
-                            <code className="ml-2 bg-muted px-1 py-0.5 rounded">{volume.host}</code>
+                            <code className="ml-2 bg-muted px-1 py-0.5 rounded">
+                              {volume.host}
+                            </code>
                           </div>
                           <div>
                             <span className="font-medium">Container:</span>
-                            <code className="ml-2 bg-muted px-1 py-0.5 rounded">{volume.container}</code>
+                            <code className="ml-2 bg-muted px-1 py-0.5 rounded">
+                              {volume.container}
+                            </code>
                           </div>
                         </div>
                       </div>
@@ -368,7 +427,9 @@ export default function InstanceDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Network Configuration</CardTitle>
-                <CardDescription>Network settings and connectivity</CardDescription>
+                <CardDescription>
+                  Network settings and connectivity
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
@@ -386,13 +447,17 @@ export default function InstanceDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Performance Monitoring</CardTitle>
-                <CardDescription>Resource usage and performance metrics</CardDescription>
+                <CardDescription>
+                  Resource usage and performance metrics
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12 text-muted-foreground">
                   <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Monitoring dashboard coming soon...</p>
-                  <p className="text-sm">CPU, Memory, and Network usage charts will be displayed here</p>
+                  <p className="text-sm">
+                    CPU, Memory, and Network usage charts will be displayed here
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -400,7 +465,11 @@ export default function InstanceDetailPage() {
         </Tabs>
       </main>
 
-      <InstanceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} instance={instance} />
+      <InstanceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        instance={instance}
+      />
     </div>
-  )
+  );
 }
