@@ -22,7 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { InstanceStatus } from "@/lib/types";
+import { useFetch } from "@/hooks/use-fetch";
+import { API_END_POINTS } from "@/common/constant";
 
+type ImageTagType = {
+  id: string;
+  imageTag: string;
+};
 interface InstanceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +40,12 @@ export function InstanceModal({
   onClose,
   instance,
 }: InstanceModalProps) {
+  const [images, setImages] = useState<ImageTagType[]>([]);
+
+  const { get: fetchImages } = useFetch({
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.images}`,
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     port: "",
@@ -42,6 +54,21 @@ export function InstanceModal({
     image: "codercom/code-server:latest",
   });
 
+  const loadDockerImages = async () => {
+    const response = await fetchImages();
+    if (response.status === "success") {
+      setImages(response.data);
+    }
+  };
+  useEffect(() => {
+    loadDockerImages();
+  }, []);
+
+  useEffect(() => {
+    if (images.length > 0 && !formData.image) {
+      setFormData((prev) => ({ ...prev, image: images[0].imageTag }));
+    }
+  }, [images]);
   useEffect(() => {
     if (instance) {
       setFormData({
@@ -147,15 +174,23 @@ export function InstanceModal({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="image">Image</Label>
-              <Input
-                id="image"
+              <Select
                 value={formData.image}
-                onChange={(e) =>
-                  setFormData({ ...formData, image: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, image: value })
                 }
-                className="col-span-3"
-                placeholder="codercom/code-server:latest"
-              />
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select Docker image" />
+                </SelectTrigger>
+                <SelectContent>
+                  {images.map((img) => (
+                    <SelectItem key={img.id} value={img.imageTag}>
+                      {img.imageTag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

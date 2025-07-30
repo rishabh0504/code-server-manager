@@ -465,11 +465,13 @@ export default function InstanceDetailPage() {
         </Tabs>
       </main>
 
-      <InstanceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        instance={instance}
-      />
+      {isModalOpen && instance && (
+        <InstanceModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          instance={instance}
+        />
+      )}
     </div>
   );
 }

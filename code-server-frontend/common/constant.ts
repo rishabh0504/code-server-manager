@@ -10,5 +10,6 @@ export const API_END_POINTS = {
     create: "/docker-scripts",
     update: "/docker-scripts",
     delete: "/docker-scripts",
+    images: "/docker-scripts/images",
   },
 };

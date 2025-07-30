@@ -288,12 +288,13 @@ export default function InstancesPage() {
           </CardContent>
         </Card>
       </main>
-
-      <InstanceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        instance={selectedInstance}
-      />
+      {isModalOpen && (
+        <InstanceModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          instance={selectedInstance}
+        />
+      )}
     </div>
   );
 }
