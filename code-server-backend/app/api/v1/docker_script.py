@@ -1,5 +1,4 @@
 from io import BytesIO
-from typing import OrderedDict
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from app.api.models.response import SuccessResponse
@@ -7,8 +6,6 @@ from app.api.models.docker_scripts import CreateDockerScript, UpdateDockerScript
 from app.api.db.db import prisma
 from app.api.utils.logger_utils import get_logger
 from app.api.utils.docker_utils import log_generator
-from prisma.enums import BuildStatus
-from prisma.models import BuildInfo
 
 logger = get_logger("DockerScripts")
 
@@ -63,7 +60,7 @@ async def update_script(script_id: str, data: UpdateDockerScript):
 
         updated = await prisma.dockerscript.update(
             where={"id": script_id},
-            data=data.dict(exclude_unset=True)
+            data=data.model_dump(exclude_unset=True)
         )
         return SuccessResponse(data=updated, status_code=200)
     except Exception as e:
@@ -98,14 +95,26 @@ async def stream_docker_build_logs(script_id: str):
         logger.error(f"Error streaming Docker build logs: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
-@docker_script_router.get("/docker-images", response_model=SuccessResponse)
+@docker_script_router.get("/images", response_model=SuccessResponse)
 async def get_docker_images():
+    logger.info("Trying to get the docker images info")
     try:
-        existing = await prisma.buildinfo.find_many(include={"dockerScript": True})
-        logger.info(f"Found {len(existing)} build info records")
-        for build in existing:
-            logger.info(f"Build: {build.dict()}")
-        return SuccessResponse(data=[b.dict() for b in existing], status_code=200)
+        logger.info("Trying to get the docker images info")
+        builds = await prisma.buildinfo.find_many(
+            select={
+                "id": True,
+                "status": True,
+                "imageTag": True,
+                "errorMessage": True,
+                "startedAt": True,
+                "completedAt": True,
+                "createdAt": True,
+                "updatedAt": True
+            }
+        )
+
+        return SuccessResponse(data=builds, status_code=200)
     except Exception as e:
         logger.error(f"Error fetching docker images: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+

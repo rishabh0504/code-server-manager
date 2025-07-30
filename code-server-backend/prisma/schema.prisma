@@ -59,11 +59,11 @@ model DockerScript {
 
 model BuildInfo {
   id             String        @id @default(uuid())
+  
   dockerScript   DockerScript @relation(fields: [dockerScriptId], references: [id])
   dockerScriptId String
 
   status         BuildStatus   @default(PENDING)
-  logs           String        @default("")
   imageTag       String?       // Optional: e.g., "my-image:latest"
   errorMessage   String?
   startedAt      DateTime      @default(now())
