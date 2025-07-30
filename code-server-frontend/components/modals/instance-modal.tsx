@@ -56,7 +56,7 @@ export function InstanceModal({
         name: "",
         port: "",
         url: "",
-        status: "PENDING",
+        status: "PENDING" as InstanceStatus,
         image: "codercom/code-server:latest",
       });
     }

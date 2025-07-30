@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { CredentialType } from "@/lib/types";
 import { useFetch } from "@/hooks/use-fetch";
 import { API_END_POINTS } from "@/common/constant";
+import { useToast } from "@/hooks/use-toast";
 
 interface CredentialModalProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ export function CredentialModal({
   onClose,
   credential,
 }: CredentialModalProps) {
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     name: "",
     type: "GITHUB" as CredentialType,
@@ -78,9 +81,18 @@ export function CredentialModal({
     e.preventDefault();
     const response = await createCredential(formData);
     if (response.status === "success") {
+      toast({
+        title: "Credential Created",
+        description: `Credential for "${formData.name}" was created successfully.`,
+      });
       console.log("Credential created:", formData);
       onClose();
     } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Credential creation failed. Please try again.",
+      });
       console.error("Credential creation failed:", formData);
     }
   };

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFetch } from "@/hooks/use-fetch";
+import { useToast } from "@/hooks/use-toast";
 import type React from "react";
 import { useEffect, useState } from "react";
 
@@ -28,6 +29,8 @@ export function DockerScriptModal({
   onClose,
   script,
 }: DockerScriptModalProps) {
+  const { toast } = useToast();
+
   const {
     data,
     loading,
@@ -65,6 +68,7 @@ export function DockerScriptModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let response;
+
     if (script) {
       response = await updateDockerScripts(
         formData,
@@ -73,14 +77,23 @@ export function DockerScriptModal({
     } else {
       response = await createDockerScripts(formData);
     }
+
     if (response.status === "success") {
-      console.log("docker script created:", formData);
+      toast({
+        title: script ? "Script Updated" : "Script Created",
+        description: `"${formData.name}" was successfully ${
+          script ? "updated" : "created"
+        }.`,
+      });
       onClose();
     } else {
-      console.error("Credential creation failed:", formData);
+      toast({
+        title: "Something went wrong",
+        description: `Failed to ${script ? "update" : "create"} the script.`,
+        variant: "destructive", // if your toast UI supports this
+      });
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl overflow-y-auto">
