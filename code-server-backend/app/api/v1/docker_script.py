@@ -6,10 +6,55 @@ from app.api.models.docker_scripts import CreateDockerScript, UpdateDockerScript
 from app.api.db.db import prisma
 from app.api.utils.logger_utils import get_logger
 from app.api.utils.docker_utils import log_generator
+import traceback
 
 logger = get_logger("DockerScripts")
 
 docker_script_router = APIRouter(prefix="/docker-scripts", tags=["Docker Image Scripts"])
+
+
+@docker_script_router.get("/images", response_model=SuccessResponse)
+async def get_docker_images():
+    logger.info("Trying to get the docker images info")
+    try:
+        builds = await prisma.buildinfo.find_many(
+            order={"createdAt": "desc"},
+            include={"dockerScript": True}
+        )
+
+        # Manual distinct by imageTag
+        seen_tags = set()
+        distinct_builds = []
+
+        for b in builds:
+            if b.imageTag and b.imageTag not in seen_tags:
+                seen_tags.add(b.imageTag)
+                distinct_builds.append({
+                    "id": b.id,
+                    "imageTag": b.imageTag
+                })
+
+        return SuccessResponse(data=distinct_builds, status_code=200)
+
+    except Exception as e:
+        logger.error(f"General error fetching docker images: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+@docker_script_router.get("/{script_id}/build-image", response_class=StreamingResponse)
+async def stream_docker_build_logs(script_id: str):
+    try:
+        script = await prisma.dockerscript.find_unique(where={"id": script_id})
+        if not script:
+            raise HTTPException(status_code=404, detail="Script not found")
+
+        fileobj = BytesIO(script.dockerFile.encode('utf-8'))
+        return StreamingResponse(log_generator(fileobj = fileobj,tag = script.tag, dockerScriptId=script.id), media_type="application/octet-stream")
+
+    except Exception as e:
+        logger.error(f"Error streaming Docker build logs: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    
 
 # Create
 @docker_script_router.post("/", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
@@ -79,42 +124,5 @@ async def delete_script(script_id: str):
         return SuccessResponse(data={"id": script_id}, status_code=200)
     except Exception as e:
         logger.error(f"Error deleting DockerScript {script_id}: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@docker_script_router.get("/{script_id}/build-image", response_class=StreamingResponse)
-async def stream_docker_build_logs(script_id: str):
-    try:
-        script = await prisma.dockerscript.find_unique(where={"id": script_id})
-        if not script:
-            raise HTTPException(status_code=404, detail="Script not found")
-
-        fileobj = BytesIO(script.dockerFile.encode('utf-8'))
-        return StreamingResponse(log_generator(fileobj = fileobj,tag = script.tag, dockerScriptId=script.id), media_type="application/octet-stream")
-
-    except Exception as e:
-        logger.error(f"Error streaming Docker build logs: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-    
-@docker_script_router.get("/images", response_model=SuccessResponse)
-async def get_docker_images():
-    logger.info("Trying to get the docker images info")
-    try:
-        logger.info("Trying to get the docker images info")
-        builds = await prisma.buildinfo.find_many(
-            select={
-                "id": True,
-                "status": True,
-                "imageTag": True,
-                "errorMessage": True,
-                "startedAt": True,
-                "completedAt": True,
-                "createdAt": True,
-                "updatedAt": True
-            }
-        )
-
-        return SuccessResponse(data=builds, status_code=200)
-    except Exception as e:
-        logger.error(f"Error fetching docker images: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
