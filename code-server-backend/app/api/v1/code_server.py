@@ -8,6 +8,11 @@ from app.api.models.response import SuccessResponse
 from app.api.utils.network_utils import get_safe_port
 from prisma.enums import CredentialType, InstanceStatus
 from app.api.utils import docker_utils
+
+from app.api.utils.logger_utils import get_logger
+
+logger = get_logger("CodeServer")
+
 code_server_router = APIRouter(
     prefix="/code-server",
     tags=["Code Server API Management"]
@@ -34,7 +39,6 @@ async def create_code_servers( create_code_server : CodeServerCreate):
         "--auth", "none"
     ]
 
-    print(cmd)
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise HTTPException(status_code=500, detail=f"Instance creation failed: {result.stderr}")
@@ -86,3 +90,16 @@ async def create_code_servers( create_code_server : CodeServerCreate):
         message="Code server started and GitHub repo configured",
         data=code_server_instance,
     )
+
+
+# Read One
+@code_server_router.get("/{instance_id}", response_model=SuccessResponse)
+async def get_code_server(instance_id: str):
+    try:
+        script = await prisma.codeserverinstance.find_unique(where={"id": instance_id}, include={"activities": True})
+        if not script:
+            raise HTTPException(status_code=404, detail="Script not found")
+        return SuccessResponse(data=script, status_code=200)
+    except Exception as e:
+        logger.error(f"Error fetching Code server instance {instance_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
