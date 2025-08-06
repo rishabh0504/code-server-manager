@@ -2,7 +2,8 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { API_END_POINTS } from "@/common/constant";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,9 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { InstanceStatus } from "@/lib/types";
 import { useFetch } from "@/hooks/use-fetch";
-import { API_END_POINTS } from "@/common/constant";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 type ImageTagType = {
   id: string;
@@ -40,18 +40,17 @@ export function InstanceModal({
   onClose,
   instance,
 }: InstanceModalProps) {
+  const { toast } = useToast();
+
   const [images, setImages] = useState<ImageTagType[]>([]);
 
-  const { get: fetchImages } = useFetch({
+  const { get: fetchImages, post: createCodeServer } = useFetch({
     url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.images}`,
   });
 
   const [formData, setFormData] = useState({
     name: "",
-    port: "",
-    url: "",
-    status: "PENDING" as InstanceStatus,
-    image: "codercom/code-server:latest",
+    image: "",
   });
 
   const loadDockerImages = async () => {
@@ -73,27 +72,35 @@ export function InstanceModal({
     if (instance) {
       setFormData({
         name: instance.name || "",
-        port: instance.port?.toString() || "",
-        url: instance.url || "",
-        status: instance.status || "PENDING",
-        image: instance.image || "codercom/code-server:latest",
+        image: instance.image || "",
       });
     } else {
       setFormData({
         name: "",
-        port: "",
-        url: "",
-        status: "PENDING" as InstanceStatus,
-        image: "codercom/code-server:latest",
+        image: "",
       });
     }
   }, [instance]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
-    onClose();
+    const response = await createCodeServer(
+      formData,
+      `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CODE_SERVER.create}`
+    );
+    if (response.status === "success") {
+      toast({
+        title: "Code server instance created",
+        description: `Code server instance "${formData.name}" was created successfully.`,
+      });
+      onClose();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Code server instance creation failed. Please try again.",
+      });
+    }
   };
 
   return (
@@ -124,54 +131,7 @@ export function InstanceModal({
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="port">Port</Label>
-              <Input
-                id="port"
-                type="number"
-                value={formData.port}
-                onChange={(e) =>
-                  setFormData({ ...formData, port: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="8080"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="url">URL</Label>
-              <Input
-                id="url"
-                value={formData.url}
-                onChange={(e) =>
-                  setFormData({ ...formData, url: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="https://dev.example.com"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: InstanceStatus) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="RUNNING">Running</SelectItem>
-                  <SelectItem value="PAUSED">Paused</SelectItem>
-                  <SelectItem value="STOPPED">Stopped</SelectItem>
-                  <SelectItem value="TERMINATED">Terminated</SelectItem>
-                  <SelectItem value="ERROR">Error</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="image">Image</Label>
               <Select
