@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -43,42 +43,45 @@ import {
   Activity,
 } from "lucide-react";
 import { InstanceModal } from "@/components/modals/instance-modal";
-import type { InstanceStatus } from "@/lib/types";
+import type { CodeServerInstance, InstanceStatus } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { useFetch } from "@/hooks/use-fetch";
+import { API_END_POINTS } from "@/common/constant";
 
-// Mock data
-const instances = [
-  {
-    id: "1",
-    name: "Development Server",
-    port: 8080,
-    url: "https://dev.example.com",
-    status: "RUNNING" as InstanceStatus,
-    image: "codercom/code-server:latest",
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-01-20"),
-  },
-  {
-    id: "2",
-    name: "Testing Environment",
-    port: 8081,
-    url: "https://test.example.com",
-    status: "PENDING" as InstanceStatus,
-    image: "codercom/code-server:4.9.1",
-    createdAt: new Date("2024-01-16"),
-    updatedAt: new Date("2024-01-19"),
-  },
-  {
-    id: "3",
-    name: "Production Mirror",
-    port: 8082,
-    url: "https://prod-mirror.example.com",
-    status: "STOPPED" as InstanceStatus,
-    image: "codercom/code-server:latest",
-    createdAt: new Date("2024-01-17"),
-    updatedAt: new Date("2024-01-18"),
-  },
-];
+// // Mock data
+// const instances = [
+//   {
+//     id: "1",
+//     name: "Development Server",
+//     port: 8080,
+//     url: "https://dev.example.com",
+//     status: "RUNNING" as InstanceStatus,
+//     image: "codercom/code-server:latest",
+//     createdAt: new Date("2024-01-15"),
+//     updatedAt: new Date("2024-01-20"),
+//     activities: [],
+//   },
+//   {
+//     id: "2",
+//     name: "Testing Environment",
+//     port: 8081,
+//     url: "https://test.example.com",
+//     status: "PENDING" as InstanceStatus,
+//     image: "codercom/code-server:4.9.1",
+//     createdAt: new Date("2024-01-16"),
+//     updatedAt: new Date("2024-01-19"),
+//   },
+//   {
+//     id: "3",
+//     name: "Production Mirror",
+//     port: 8082,
+//     url: "https://prod-mirror.example.com",
+//     status: "STOPPED" as InstanceStatus,
+//     image: "codercom/code-server:latest",
+//     createdAt: new Date("2024-01-17"),
+//     updatedAt: new Date("2024-01-18"),
+//   },
+// ];
 
 function getStatusBadge(status: InstanceStatus) {
   const variants: Record<
@@ -114,6 +117,26 @@ export default function InstancesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInstance, setSelectedInstance] = useState<any>(null);
   const router = useRouter();
+
+  const {
+    data,
+    loading,
+    get: fetchCodeServers,
+  } = useFetch({
+    url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CODE_SERVER.read}`,
+  });
+
+  const [instances, setInstances] = useState<CodeServerInstance[]>([]);
+
+  const loadCodeServers = async () => {
+    const response = await fetchCodeServers();
+    if (response.status === "success") {
+      setInstances(response.data || []);
+    }
+  };
+  useEffect(() => {
+    loadCodeServers();
+  }, []);
 
   const filteredInstances = instances.filter(
     (instance) =>
@@ -220,7 +243,7 @@ export default function InstancesPage() {
                       </code>
                     </TableCell>
                     <TableCell>
-                      {instance.createdAt.toLocaleDateString()}
+                      <span>{new Date(instance.createdAt).toDateString()}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
