@@ -29,7 +29,7 @@ export const useFetch = ({ url, options = {} }: UseFetchType) => {
     setError(null);
 
     try {
-      const response = await fetch(finalUrl, {
+      const response: any = await fetch(finalUrl, {
         ...options, // base options first
         method, // override method if set in options
         headers: {
@@ -46,17 +46,19 @@ export const useFetch = ({ url, options = {} }: UseFetchType) => {
         ? await response.json()
         : await response.text();
 
-      if (!response.ok) {
+      if (!response.ok || response.detail) {
         throw new Error(
-          responseData?.message || `HTTP error! Status: ${response.status}`
+          responseData?.message ||
+            response.detail ||
+            `HTTP error! Status: ${response.status}`
         );
       }
 
       setData(responseData);
       return responseData;
     } catch (err: any) {
-      console.error("Fetch Error:", err);
-      setError(err?.message || "Unknown error");
+      console.table(err);
+      setError(err?.message || err?.detail || "Unknown error");
     } finally {
       setLoading(false);
     }

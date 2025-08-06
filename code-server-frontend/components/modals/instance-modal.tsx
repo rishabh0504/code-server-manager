@@ -44,7 +44,11 @@ export function InstanceModal({
 
   const [images, setImages] = useState<ImageTagType[]>([]);
 
-  const { get: fetchImages, post: createCodeServer } = useFetch({
+  const {
+    get: fetchImages,
+    post: createCodeServer,
+    error,
+  } = useFetch({
     url: `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.DOCKER_SCRIPTS.images}`,
   });
 
@@ -84,22 +88,36 @@ export function InstanceModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await createCodeServer(
-      formData,
-      `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CODE_SERVER.create}`
-    );
-    if (response.status === "success") {
-      toast({
-        title: "Code server instance created",
-        description: `Code server instance "${formData.name}" was created successfully.`,
-      });
-      onClose();
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Code server instance creation failed. Please try again.",
-      });
+
+    try {
+      const response: any = await createCodeServer(
+        formData,
+        `${process.env.NEXT_PUBLIC_BASE_API_POINT}${API_END_POINTS.CODE_SERVER.create}`
+      );
+
+      if (response && response?.status === "success") {
+        toast({
+          title: "Code server instance created ✅",
+          description: `Code server instance "${formData.name}" was created successfully.`,
+        });
+        onClose();
+      } else {
+        // In case API responds but with error status
+        console.log(response);
+        toast({
+          variant: "destructive",
+          title: "Failed to create code server",
+          description: response?.detail || "An unknown error occurred.",
+        });
+      }
+    } catch (errorMessage: any) {
+      // In case fetch or internal logic throws
+      console.error("Error while creating code server:", errorMessage);
+      // toast({
+      //   variant: "destructive",
+      //   title: "Error",
+      //   description: error,
+      // });
     }
   };
 

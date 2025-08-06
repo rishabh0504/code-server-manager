@@ -96,10 +96,10 @@ async def create_code_servers( create_code_server : CodeServerCreate):
 @code_server_router.get("/{instance_id}", response_model=SuccessResponse)
 async def get_code_server(instance_id: str):
     try:
-        script = await prisma.codeserverinstance.find_unique(where={"id": instance_id}, include={"activities": True})
-        if not script:
+        instance = await prisma.codeserverinstance.find_unique(where={"id": instance_id}, include={"activities": True})
+        if not instance:
             raise HTTPException(status_code=404, detail="Script not found")
-        return SuccessResponse(data=script, status_code=200)
+        return SuccessResponse(data=instance, status_code=200)
     except Exception as e:
         logger.error(f"Error fetching Code server instance {instance_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")

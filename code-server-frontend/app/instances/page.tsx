@@ -314,7 +314,10 @@ export default function InstancesPage() {
       {isModalOpen && (
         <InstanceModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            loadCodeServers();
+          }}
           instance={selectedInstance}
         />
       )}
