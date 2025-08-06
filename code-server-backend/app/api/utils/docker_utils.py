@@ -85,4 +85,59 @@ async def log_generator(fileobj: BytesIO, tag: str, dockerScriptId: str) -> Asyn
 
     finally:
         await safe_log()
+
+def pause_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.pause()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def unpause_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.unpause()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
+def start_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.start()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+def stop_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.stop()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    
+def remove_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.remove()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+def restart_container(container_name: str):
+    try:
+        container = client.containers.get(container_name)
+        container.restart()
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_name}' not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

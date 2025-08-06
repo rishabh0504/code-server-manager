@@ -3,11 +3,12 @@ import subprocess
 import uuid
 from fastapi import APIRouter, HTTPException
 from app.api.db.db import prisma
-from app.api.models.code_server import CodeServerCreate
+from app.api.models.code_server import CodeServerCreate, CodeServerStatusChange
 from app.api.models.response import SuccessResponse
 from app.api.utils.network_utils import get_safe_port
 from prisma.enums import CredentialType, InstanceStatus
 from app.api.utils import docker_utils
+import json
 
 from app.api.utils.logger_utils import get_logger
 
@@ -29,6 +30,19 @@ async def create_code_servers( create_code_server : CodeServerCreate):
     container_name = f"{create_code_server.name}"
     user_home = os.path.expanduser("~")
     image_name = f"{create_code_server.image}"
+
+    settings_dir = os.path.join(user_home, ".config", "code-server", "User")
+    os.makedirs(settings_dir, exist_ok=True)
+
+    settings_path = os.path.join(settings_dir, "settings.json")
+    settings = {
+        "workbench.colorTheme": "Default Dark+"
+    }
+
+    with open(settings_path, "w") as f:
+        json.dump(settings, f, indent=2)
+
+
     # Step 1: Start Docker container
     cmd = [
         "docker", "run", "-d",
@@ -102,4 +116,55 @@ async def get_code_server(instance_id: str):
         return SuccessResponse(data=instance, status_code=200)
     except Exception as e:
         logger.error(f"Error fetching Code server instance {instance_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    
+@code_server_router.post("/{instance_id}/change-status", response_model=SuccessResponse)
+async def update_code_server_action(instance_id: str, actionableObject: CodeServerStatusChange):
+    try:
+        instance = await prisma.codeserverinstance.find_unique(
+            where={"id": instance_id},
+            include={"activities": True}
+        )
+
+        if not instance:
+            raise HTTPException(status_code=404, detail="Code server instance not found")
+
+        container_name = instance.name
+        action = actionableObject.action.upper()
+        new_status = None
+
+        docker_command = []
+
+        if action == "START":
+            docker_utils.start_container(container_name=container_name)
+            new_status = "RUNNING"
+        elif action == "STOP":
+            docker_utils.stop_container(container_name=container_name)
+            new_status = "STOPPED"
+        elif action == "PAUSE":
+            docker_utils.pause_container(container_name=container_name)
+            new_status = "PAUSED"
+        elif action == "UNPAUSE":
+            docker_utils.unpause_container(container_name=container_name)
+            new_status = "RUNNING"
+        elif action == "DELETE":
+            docker_utils.remove_container(container_name=container_name)
+            new_status = "TERMINATED"
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported action: {action}")
+
+        # Pass command to util function (assumes it can handle system-level docker commands)
+
+        updated_instance = await prisma.codeserverinstance.update(
+            where={"id": instance_id},
+            data={"status": new_status}
+        )
+
+        return SuccessResponse(
+            data={"message": f"Container '{container_name}' {action.lower()}ed successfully."},
+            status_code=200
+        )
+
+    except Exception as e:
+        logger.error(f"Error changing status of Code server instance {instance_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
